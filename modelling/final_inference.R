@@ -11,13 +11,13 @@ library(dplyr)
 library(tidyr)
 library(spdep)
 
-#fix the seed for reproducibility 
+#fix the seed for reproducibility
 set.seed(200809)
 
 #set the working folder
 setwd("national-poll-analysis/")
 
-#whether we shall upsample steet data to the size of 50% viber data 
+#whether we shall upsample steet data to the size of 50% viber data
 #and downsample the viber data to the 50% of its size
 upsample_street = F
 
@@ -25,7 +25,7 @@ upsample_street = F
 extra_noise = T
 #whether to use BYM2 spatial field in the model
 spat_obl =  T
-prefix = "strspat_strtemp_"
+prefix = "spat_temp_"
 #data structure to store the results
 overall_res = NULL
 #if one reads in the model or computes from scratch
@@ -60,8 +60,8 @@ if(spat_obl)
   lat = getData("GADM",country="Latvia",level=0)
   pol = getData("GADM",country="Poland",level=0)
   rus = getData("GADM",country="Russia",level=0)
-  
-  
+
+
   ggplot(bel,aes(x=long,y=lat,group=group))+
     geom_polygon(aes(fill=id),color="grey30")+
     geom_polygon(data=lit,fill="grey60",color="grey80")+
@@ -72,7 +72,7 @@ if(spat_obl)
     coord_map(xlim=c(-1,1)+bbox(bel)["x",],ylim=c(-1,1)+bbox(bel)["y",])+
     scale_fill_discrete(guide="none")+
     theme_bw()+theme(panel.grid=element_blank())
-  
+
   library(spdep)
   nbadj = poly2nb(pl = bel)
   nb2INLA("adj.bel", nbadj)
