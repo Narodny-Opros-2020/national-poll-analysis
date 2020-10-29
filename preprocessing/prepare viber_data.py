@@ -41,14 +41,14 @@ df_valid.drop(df_valid.loc[df_valid['region'] == 'Проживаю за пред
 df_valid.drop(df_valid.loc[df_valid['location_type'] == 'Проживаю за пределами РБ'].index, inplace=True)
 
 # create field for area of residence
-df_valid['countryside'] = df_valid['location_type'].map(lambda x: 'Село' if x == 'Агрогородок / Село / Деревня'  else 'Город')
+df_valid['countryside'] = df_valid['location_type'].map(lambda x: 'Село' if x == 'Агрогородок / Село / Деревня' else 'Город')
 
 df_valid['location_type'] = df_valid['countryside']
 
 df_valid.drop('countryside', axis=1, inplace=True)
 
 # drop na values
-df_valid = df_valid.dropna(subset=[ 'age', 'gender', 'region', 'location_type', 'income', 'education', 'use_viber', 'vote_day'])
+df_valid = df_valid.dropna(subset=['age', 'gender', 'region', 'location_type', 'income', 'education', 'use_viber', 'vote_day'])
 
 # df_valid.info()
 
@@ -56,7 +56,7 @@ df_valid = df_valid.dropna(subset=[ 'age', 'gender', 'region', 'location_type', 
 df_valid['candidate'] = df_valid['candidate'].map(lambda x: np.nan if ((x == 'Затрудняюсь ответить') | (x == 'Не пойду голосовать')) else x)
 
 # create early voting field
-df_valid['early_voting'] = df_valid['vote_day'].map({'В день выборов (9 августа)':'Нет', 'Досрочно (4-8 августа)':'Да'})
+df_valid['early_voting'] = df_valid['vote_day'].map({'В день выборов (9 августа)': 'Нет', 'Досрочно (4-8 августа)': 'Да'})
 
 df_valid.drop(['vote_day'], axis = 1, inplace=True)
 

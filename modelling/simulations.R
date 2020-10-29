@@ -95,7 +95,7 @@ print(model.inla$summary.random)
 res = c(1,3,4,5,6)*0
 #sum of groups count
 Ns = 0
-ncats = c(unlist(mclapply(X=1:(dim(categories)[1]),FUN = function(i) paste0(categories[i,],collapse = "+"))))
+ncats = unlist(mclapply(X=1:(dim(categories)[1]), FUN = function(i) paste0(categories[i,], collapse = "+")))
 g=function(x)
 {
   return((x = 1/(1+exp(-x))))

@@ -89,9 +89,9 @@ if(upsample_street) {
   votes_viber_test =  votes_viber[-votes_viber_train_id,]
   votes_viber = votes_viber[votes_viber_train_id,]
 }
-names(un_cats)[3] = "gender" 
+names(un_cats)[3] = "gender"
 
-for (index in 1:length(targets)){
+for (index in seq_along(targets)){
 
   if(index == 7)
   {
@@ -99,153 +99,153 @@ for (index in 1:length(targets)){
   }else{
     target_id = "candidate"
   }
-  
-  target = targets[index]
-  print(target)
-  print(type)
-  
-  
 
-  #creates target variable 
+    target = targets[index]
+    print(target)
+    print(type)
+
+
+
+  #creates target variable
   votes_str$target = as.integer(votes_str[[target_id]] == target)
   votes_viber$target = as.integer(votes_viber[[target_id]] == target)
-  
-  
-  #X column names
-  c_names = c("age","education","gender","location_type","region")
-  #prepare data for inference
-  viber_uniques = unique(votes_str$use_viber)
-  income_uniques = unique(votes_viber$income)
-  education_uniques = unique(votes_viber$education)
-  augmented_cats = un_cats[,c("count", c_names)]
-  tmp = cbind(augmented_cats[,-1],  rep(NA,dim(augmented_cats)[1]))
-  names(tmp) = c("age","education","gender", "location_type","region","target")
-  
-  if(type=="both")
-  {
-    votes=rbind(tmp,votes_str[,names(tmp)],votes_viber[,names(tmp)])
-  }else if(type=="viber")
-  {
-    votes=rbind(tmp,votes_viber[,names(tmp)])
-  }else
-  {
-    votes=rbind(tmp,votes_str[,names(tmp)])
-  }
-  if(spat_obl)
-  {
-    votes$rid = 0
-    votes$rid[votes$region=="Брестская"] = 1
-    votes$rid[votes$region=="Витебская"] = 6
-    votes$rid[votes$region=="Гродненская"] = 3
-    votes$rid[votes$region=="Гомельская"] = 2
-    votes$rid[votes$region=="Могилевская"] = 4
-    votes$rid[votes$region=="Минск"|votes$region=="Минская"] = 5
-  }
-  rm(tmp)
-  gc()
-  
-  #X column names
-  if(extra_noise)
-    c_names = c("gender","location_type","region")
-  
-  #define the link function
-  g=function(x)
-  {
-    return((x = 1/(1+exp(-x))))
-  }
-  control.family1 = list(control.link=list(model="logit"))
-  #define the prior for precision
-  pcprior = list(prec = list(prior = "pc.prec", param=c(1,0.1)))
-  #define the id for iid effects
-  votes$id = rep(1,dim(votes)[1])
-  
-  #define the model
-  if(extra_noise)
-  { 
-    votes$ageid = as.integer(as.factor(votes$age))
-    votes$eduid = 0
-    votes$eduid[votes$education=="Базовое / Среднее общее (школа)"] = 2
-    votes$eduid[votes$education== "Профессионально-техническое"] = 3
-    votes$eduid[votes$education=="Среднее специальное"] = 4
-    votes$eduid[votes$education=="Высшее"] = 5
-    votes$eduid[votes$education=="Другое"] = 1
-    
 
+
+    #X column names
+    c_names = c("age","education","gender","location_type","region")
+    #prepare data for inference
+    viber_uniques = unique(votes_str$use_viber)
+    income_uniques = unique(votes_viber$income)
+    education_uniques = unique(votes_viber$education)
+    augmented_cats = un_cats[,c("count", c_names)]
+    tmp = cbind(augmented_cats[,-1],  rep(NA,dim(augmented_cats)[1]))
+    names(tmp) = c("age","education","gender", "location_type","region","target")
+
+    if(type=="both")
+    {
+      votes=rbind(tmp,votes_str[,names(tmp)],votes_viber[,names(tmp)])
+    }else if(type=="viber")
+    {
+      votes=rbind(tmp,votes_viber[,names(tmp)])
+    }else
+    {
+      votes=rbind(tmp,votes_str[,names(tmp)])
+    }
     if(spat_obl)
     {
-      fml = as.formula(paste0("target~-1+ f(rid,
+      votes$rid = 0
+      votes$rid[votes$region=="Брестская"] = 1
+      votes$rid[votes$region=="Витебская"] = 6
+      votes$rid[votes$region=="Гродненская"] = 3
+      votes$rid[votes$region=="Гомельская"] = 2
+      votes$rid[votes$region=="Могилевская"] = 4
+      votes$rid[votes$region=="Минск"|votes$region=="Минская"] = 5
+    }
+    rm(tmp)
+    gc()
+
+    #X column names
+    if(extra_noise)
+      c_names = c("gender","location_type","region")
+
+    #define the link function
+    g=function(x)
+    {
+      return((x = 1/(1+exp(-x))))
+    }
+    control.family1 = list(control.link=list(model="logit"))
+    #define the prior for precision
+    pcprior = list(prec = list(prior = "pc.prec", param=c(1,0.1)))
+    #define the id for iid effects
+    votes$id = rep(1,dim(votes)[1])
+
+    #define the model
+    if(extra_noise)
+    {
+      votes$ageid = as.integer(as.factor(votes$age))
+      votes$eduid = 0
+      votes$eduid[votes$education=="Базовое / Среднее общее (школа)"] = 2
+      votes$eduid[votes$education== "Профессионально-техническое"] = 3
+      votes$eduid[votes$education=="Среднее специальное"] = 4
+      votes$eduid[votes$education=="Высшее"] = 5
+      votes$eduid[votes$education=="Другое"] = 1
+
+
+      if(spat_obl)
+      {
+        fml = as.formula(paste0("target~-1+ f(rid,
     model=\"bym2\",graph=gf.reg)+f(id, model=\"iid\", hyper = pcprior)+f(ageid, model=\"ar1\", hyper = pcprior)+f(eduid, model=\"ar1\", hyper = pcprior)+",paste("f(",c_names,", model=\"iid\",hyper =pcprior)",collapse = "+")))
+      }else
+        fml = as.formula(paste0("target~-1+f(id, model=\"iid\", hyper = pcprior)+f(ageid, model=\"ar1\", hyper = pcprior)+f(eduid, model=\"ar1\", hyper = pcprior)+",paste("f(",c_names,", model=\"iid\",hyper =pcprior)",collapse = "+")))
     }else
-      fml = as.formula(paste0("target~-1+f(id, model=\"iid\", hyper = pcprior)+f(ageid, model=\"ar1\", hyper = pcprior)+f(eduid, model=\"ar1\", hyper = pcprior)+",paste("f(",c_names,", model=\"iid\",hyper =pcprior)",collapse = "+")))
-  }else 
-  {  
-    if(spat_obl)
     {
-      fml = as.formula(paste0("target~-1+ f(rid,
+      if(spat_obl)
+      {
+        fml = as.formula(paste0("target~-1+ f(rid,
     model=\"bym2\",graph=gf.reg)+f(id, model=\"iid\", hyper = pcprior)+",paste("f(",c_names,", model=\"iid\",hyper =pcprior)",collapse = "+")))
-    }else
-      fml = as.formula(paste0("target~-1+f(id, model=\"iid\", hyper = pcprior)+",paste("f(",c_names,", model=\"iid\",hyper =pcprior)",collapse = "+")))
-  }
-  if(compute)
-  {  
-    #estimate parameters of the model
+      }else
+        fml = as.formula(paste0("target~-1+f(id, model=\"iid\", hyper = pcprior)+",paste("f(",c_names,", model=\"iid\",hyper =pcprior)",collapse = "+")))
+    }
+    if(compute)
+    {
+      #estimate parameters of the model
     model.inla = inla(fml,family = "binomial",Ntrials = 1,quantiles=c(0.025, 0.5, 0.975,0.0005,0.9995,0.005,0.995,0.05,0.95),data = votes,control.compute=list(config = TRUE,dic=TRUE, waic=TRUE),control.family=control.family1,
-                    control.predictor=list(compute=T,link = 1,quantiles=c(0.025, 0.5, 0.975,0.0005,0.9995,0.005,0.995,0.05,0.95)))
-  }else{
-   
-     #load the model
+                        control.predictor=list(compute=T,link = 1,quantiles=c(0.025, 0.5, 0.975,0.0005,0.9995,0.005,0.995,0.05,0.95)))
+    }else{
+
+      #load the model
      load(paste0(prefix,"model_", target, '_','_',upsample_street,'_', type,'_', spat_obl, "_noups.gzip"))
-  }
-  #look at the fitted model
-  summ.inla = summary(model.inla)
-  print(summ.inla)
-  print(model.inla$summary.random)
-  
-  #perform poststratification
-  nas = 0
-  #prediction
-  res = c(1,3,4,5,6,7,8,9,10,11,12)*0
-  #sum of groups count
-  Ns = 0
+    }
+    #look at the fitted model
+    summ.inla = summary(model.inla)
+    print(summ.inla)
+    print(model.inla$summary.random)
+
+    #perform poststratification
+    nas = 0
+    #prediction
+    res = c(1,3,4,5,6,7,8,9,10,11,12)*0
+    #sum of groups count
+    Ns = 0
   ucat = unique(augmented_cats)
-  ncats = c(unlist(mclapply(X=1:(dim(augmented_cats)[1]),FUN = function(i) paste0(as.character(augmented_cats[i,-1]),collapse = "+"))))
+  ncats = unlist(mclapply(X=1:(dim(augmented_cats)[1]), FUN = function(i) paste0(as.character(augmented_cats[i, -1]), collapse = "+")))
   utest = unique(votes_viber_test[,c(target_id,names(augmented_cats)[-1])])
-  tcats = c(unlist(mclapply(X=1:(dim(utest)[1]),FUN = function(i) paste0(as.character(utest[i,-1]),collapse = "+"))))
-  preds = NULL
-  for(cell in 1:dim(augmented_cats)[1])
-  {
-    
-    rcur = g(summ.inla$linear.predictor[cell,c(1,3,4,5,6,7,8,9,10,11,12)]) 
-    res = res + rcur*as.integer(augmented_cats[cell,'count'])
-    
+  tcats = unlist(mclapply(X=1:(dim(utest)[1]), FUN = function(i) paste0(as.character(utest[i, -1]), collapse = "+")))
+    preds = NULL
+    for(cell in 1:dim(augmented_cats)[1])
+    {
+
+      rcur = g(summ.inla$linear.predictor[cell,c(1,3,4,5,6,7,8,9,10,11,12)])
+      res = res + rcur*as.integer(augmented_cats[cell,'count'])
+
     id_test = which(tcats==ncats[cell])
     for(ids in id_test)
     {
       if(!is.na(utest[cell,1]))
         preds = rbind(preds,c(as.integer(utest[cell,1]==target),rcur$mean,rcur$`0.5quant`,rcur$mode,rcur$`0.025quant`,rcur$`0.975quant`))
     }
-    
-    if (anyNA(res)) {
-      nas = c(nas, cell)
+
+      if (anyNA(res)) {
+        nas = c(nas, cell)
+      }
+      Ns = Ns + as.integer(augmented_cats[cell,'count'])
     }
-    Ns = Ns + as.integer(augmented_cats[cell,'count'])
-  }
-  res=res/as.integer(Ns)
-  mbrier = mean(min((preds[,1]- preds[,-1])^2)/(1-(preds[,5]-preds[,6])^2))
-  print(mbrier)
-  print(res)
-  summary(votes$target)[4]
+    res=res/as.integer(Ns)
+    mbrier = mean(min((preds[,1]- preds[,-1])^2)/(1-(preds[,5]-preds[,6])^2))
+    print(mbrier)
+    print(res)
+    summary(votes$target)[4]
   overall_res = cbind(overall_res,unlist(c(res,model.inla$mlik[2],model.inla$waic[1],model.inla$dic[1],mbrier)))
-  
-  if(compute)
-  {
-    #save the results
+
+    if(compute)
+    {
+      #save the results
     save(model.inla, file = paste0("data/", prefix,"model_", target, '_','_',upsample_street,'_', type,'_', spat_obl, "_noups.gzip"))
     save.image(file = paste0("data/", prefix,"image_", target, '_','_',upsample_street,'_', type,'_', spat_obl, "_noups.gzip"), compress=T)
-  }
+    }
 
 
-  #save the results
+    #save the results
   write.csv(c(res,model.inla$mlik[2],model.inla$waic[1],model.inla$dic[1],mbrier), paste0("data/", prefix,'spat_noups_', target,'_',upsample_street,'_', '_', type,'_', spat_obl,'_noups.csv'), row.names=F, fileEncoding='UTF-8')
 
 }

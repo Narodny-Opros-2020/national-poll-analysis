@@ -19,7 +19,7 @@ setwd("national-poll-analysis/")
 catsFN = 'reg_lt_age_gen_edu.csv'
 
 c_names = c("age","education","gender","location_type","region")
-un_cats = read.csv(catsFN, encoding="UTF-8")
+un_cats = read.csv(catsFN, encoding="UTF-8", stringsAsFactors=T)
 names(un_cats)[3] = "gender"
 augmented_cats = un_cats[,c("count", c_names)]
 
@@ -54,7 +54,8 @@ predict_res <- function(cats, cat){
       }
       Ns = Ns + as.integer(augmented_cats[cell_i,'count'])
     }
-    res=res/as.integer(Ns)
+    Ns_ = as.integer(Ns)
+    res=res/Ns_
     #print(paste('cur res:', res))
     
     rownames(res) = NULL
@@ -76,7 +77,7 @@ for (target in targets){
   
   for (clmn in names(augmented_cats[,-1])) {
     grouped = augmented_cats %>% group_by_at(clmn) %>% summarize(count = sum(count))
-    pred_c = predict_res(grouped, clmn)
+    pred_c = predict_res(data.frame(grouped), clmn)
     # print(paste('Prediction', clmn, ':'))
     # print(pred_c)
     pred_c['target'] = target
